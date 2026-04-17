@@ -1,4 +1,16 @@
-# src/models.py
+from types import SimpleNamespace
+cfg = SimpleNamespace(
+    data=SimpleNamespace(n_records=500000, seed=42),
+    features=SimpleNamespace(zscore_threshold=3.5, heavy_ip_percentile=0.99, admin_recon_threshold=5000),
+    models=SimpleNamespace(
+        isolation_forest=SimpleNamespace(n_estimators=200, contamination=0.025, bootstrap=True, random_state=42),
+        lof=SimpleNamespace(n_neighbors=20, contamination=0.025),
+        ensemble=SimpleNamespace(min_votes=2, lift_threshold=3.0)
+    ),
+    spark=SimpleNamespace(local_memory="4g", shuffle_partitions_local=8, shuffle_partitions_cluster=200),
+    api=SimpleNamespace(port=8000, log_predictions=True),
+    alerting=SimpleNamespace(max_alerts=100, critical_ip_error_threshold=0.50, critical_request_threshold=5000),
+)# src/models.py
 # ─────────────────────────────────────────────────────────────────────────────
 # Ensemble: Isolation Forest + Local Outlier Factor + Rule Engine
 #
@@ -29,7 +41,7 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.loader import cfg
+from types import SimpleNamespace`ncfg = SimpleNamespace(data=SimpleNamespace(n_records=500000,seed=42),features=SimpleNamespace(zscore_threshold=3.5,heavy_ip_percentile=0.99,admin_recon_threshold=5000),models=SimpleNamespace(isolation_forest=SimpleNamespace(n_estimators=200,contamination=0.025,bootstrap=True,random_state=42),lof=SimpleNamespace(n_neighbors=20,contamination=0.025),ensemble=SimpleNamespace(min_votes=2,lift_threshold=3.0)),spark=SimpleNamespace(local_memory="4g",shuffle_partitions_local=8,shuffle_partitions_cluster=200),api=SimpleNamespace(port=8000,log_predictions=True),alerting=SimpleNamespace(max_alerts=100,critical_ip_error_threshold=0.50,critical_request_threshold=5000))
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S")
@@ -236,3 +248,5 @@ if __name__ == "__main__":
 # precision at k
 # shap explainability
 # mlflow tracking
+
+
