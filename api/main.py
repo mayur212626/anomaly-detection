@@ -165,3 +165,4 @@ def summary():
                               for s in ["CRITICAL","HIGH","MEDIUM","NORMAL"]},
             "last_seen":    recs[-1]["ts"]}
 # background logging
+# monitoring summary
