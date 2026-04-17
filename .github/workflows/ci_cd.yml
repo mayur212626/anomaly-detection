@@ -1,0 +1,48 @@
+name: CI/CD — Log Anomaly Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Lint
+        run: flake8 src/ api/ tests/ --max-line-length=110 --ignore=E501,W503
+      - name: Test
+        run: pytest tests/ -v --tb=short
+
+  pipeline:
+    name: Full Pipeline Run
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Data pipeline
+        run: python src/data_pipeline.py
+      - name: Anomaly detection
+        run: python src/models.py
+      - name: Alerting
+        run: python src/alerting.py
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pipeline-outputs
+          path: |
+            docs/
+            models/
