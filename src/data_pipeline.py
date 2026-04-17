@@ -212,3 +212,4 @@ def run():
 if __name__ == "__main__":
     run()
 # power law ip
+# error flags
