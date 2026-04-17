@@ -214,3 +214,4 @@ if __name__ == "__main__":
 # power law ip
 # error flags
 # ip aggregates
+# composite signals
