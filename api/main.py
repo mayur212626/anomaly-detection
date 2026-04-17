@@ -164,3 +164,4 @@ def summary():
             "severity_dist": {s: sum(1 for r in recs if r.get("severity")==s)
                               for s in ["CRITICAL","HIGH","MEDIUM","NORMAL"]},
             "last_seen":    recs[-1]["ts"]}
+# background logging
