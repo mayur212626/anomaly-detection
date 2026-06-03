@@ -16,3 +16,8 @@ shap
 mlflow
 pyyaml
 httpx
+torch
+torchvision
+dash
+dash-bootstrap-components
+plotly
