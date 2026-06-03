@@ -39,3 +39,46 @@ def _kpi_card(card_id, title, icon=""):
             html.Small(icon, className="text-muted"),
         ])
     ], className="kpi-card h-100")
+
+
+def _overview_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col(_kpi_card("kpi-total",    "Total Anomalies",   "all methods"), md=3),
+            dbc.Col(_kpi_card("kpi-critical", "Critical Alerts",   "BLOCK_IP"),    md=3),
+            dbc.Col(_kpi_card("kpi-drift",    "Drift Status",      "PSI score"),   md=3),
+            dbc.Col(_kpi_card("kpi-lift",     "Critical Lift",     "vs baseline"), md=3),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Anomaly Rate by Hour", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="overview-hourly-chart", style={"height": "280px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=8),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Severity Breakdown", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="overview-severity-pie", style={"height": "280px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=4),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Model Vote Breakdown", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="overview-method-bar", style={"height": "240px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=6),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Precision @ K", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="overview-precision-bar", style={"height": "240px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=6),
+        ], className="g-3"),
+    ], fluid=True, className="pt-3")
