@@ -93,3 +93,27 @@ class TestRunFallback:
         preds, errors, _, _ = la.run(df, cols)
         assert len(preds) == len(df)
         assert len(errors) == len(df)
+
+
+# ── threshold calibration logic ───────────────────────────────────────────────
+
+class TestThreshold:
+    def test_percentile_gives_expected_anomaly_rate(self):
+        errors = np.random.default_rng(42).exponential(1.0, size=10_000)
+        threshold = float(np.percentile(errors, la.ANOMALY_PERCENTILE))
+        preds = (errors > threshold).astype(int)
+        expected_rate = 1 - la.ANOMALY_PERCENTILE / 100
+        assert abs(preds.mean() - expected_rate) < 0.005
+
+    def test_threshold_is_finite(self):
+        errors = np.ones(100, dtype=np.float32) * 0.5
+        threshold = float(np.percentile(errors, la.ANOMALY_PERCENTILE))
+        assert np.isfinite(threshold)
+
+    def test_constants_sane(self):
+        assert 1 <= la.SEQ_LEN   <= 50
+        assert 16 <= la.HIDDEN_DIM <= 512
+        assert 1 <= la.N_LAYERS  <= 4
+        assert 0.0 < la.DROPOUT  < 1.0
+        assert la.MAX_EPOCHS     >= 5
+        assert 90 < la.ANOMALY_PERCENTILE < 100
