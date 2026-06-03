@@ -75,3 +75,53 @@ def _empty_fig(msg="Run the pipeline first"):
                        x=0.5, y=0.5, showarrow=False, font=dict(color="#8b949e", size=13))
     fig.update_layout(**_LAYOUT)
     return fig
+
+
+# ── header ────────────────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("header-status", "children"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_header(_):
+    df = _load_flagged()
+    if df.empty:
+        return "No data — run src/data_pipeline.py and src/models.py"
+    n       = int(df["anomaly"].sum()) if "anomaly" in df.columns else 0
+    total   = len(df)
+    rate    = f"{n / total:.1%}" if total else "—"
+    return f"{total:,} records loaded  ·  {n:,} anomalies ({rate})"
+
+
+# ── overview KPI cards ────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("kpi-total",    "children"),
+    Output("kpi-critical", "children"),
+    Output("kpi-drift",    "children"),
+    Output("kpi-lift",     "children"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_kpis(_):
+    df   = _load_flagged()
+    rep  = _load_report()
+    meta = _load_model_meta()
+
+    if df.empty:
+        return "—", "—", "—", "—"
+
+    total    = int(df["anomaly"].sum()) if "anomaly" in df.columns else 0
+    critical = sum(1 for a in rep.get("sample_alerts", []) if a.get("severity") == "CRITICAL")
+    sev_sum  = rep.get("severity_summary", {})
+    critical = sev_sum.get("CRITICAL", critical)
+
+    drift_data = _load_drift()
+    psi_status = drift_data.get("psi_status", "N/A")
+    psi_val    = drift_data.get("psi", 0)
+
+    lift = meta.get("eval", {}).get("critical_lift", 0)
+
+    drift_label = f"{psi_status} ({psi_val:.3f})" if drift_data else "No data"
+    lift_label  = f"{lift:.1f}x" if lift else "—"
+
+    return f"{total:,}", f"{critical:,}", drift_label, lift_label
