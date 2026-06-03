@@ -33,3 +33,18 @@ alerting:
   max_alerts: 100
   critical_ip_error_threshold: 0.50
   critical_request_threshold: 5000
+
+lstm:
+  seq_len: 10
+  hidden_dim: 64
+  n_layers: 2
+  dropout: 0.2
+  batch_size: 256
+  max_epochs: 30
+  lr: 0.001
+  patience: 5
+  anomaly_percentile: 97.5
+
+dashboard:
+  port: 8050
+  refresh_interval_ms: 60000
