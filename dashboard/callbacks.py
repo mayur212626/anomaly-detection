@@ -327,3 +327,39 @@ def update_ip_charts(_):
                         legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0)"))
 
     return fig_bar, fig_s
+
+
+@app.callback(
+    Output("ip-drilldown", "children"),
+    Input("ip-top-bar", "clickData"),
+)
+def update_ip_drilldown(click):
+    if click is None:
+        return html.P("Click any bar to see this IP's full behavioral profile.",
+                      className="text-muted small")
+
+    ip = click["points"][0]["y"]
+    df = _load_flagged()
+    if df.empty:
+        return html.P("No data.", className="text-muted small")
+
+    row = df[df["ip"] == ip].iloc[0]
+    fields = [
+        ("Total Requests",    f"{int(row.get('ip_n_requests', 0)):,}"),
+        ("Error Rate",        f"{row.get('ip_error_rate', 0):.1%}"),
+        ("Critical Rate",     f"{row.get('ip_crit_rate', 0):.1%}"),
+        ("Admin Hits",        f"{int(row.get('ip_admin_hits', 0)):,}"),
+        ("Avg Response Size", f"{row.get('ip_avg_bytes', 0):,.0f} bytes"),
+        ("Empty Response %",  f"{row.get('ip_empty_rate', 0):.1%}"),
+        ("Anomaly Score",     f"{row.get('anomaly_score', 0):.3f}"),
+        ("DoS Signal",        "YES" if row.get("dos_signal", 0) else "no"),
+        ("Admin Recon",       "YES" if row.get("admin_recon", 0) else "no"),
+    ]
+    rows = [
+        html.Tr([html.Td(k, className="text-muted small pe-3"), html.Td(v, className="fw-semibold")])
+        for k, v in fields
+    ]
+    return html.Div([
+        html.P(ip, className="fw-bold mb-2 font-monospace"),
+        dbc.Table([html.Tbody(rows)], borderless=True, size="sm", dark=True),
+    ])
