@@ -103,11 +103,15 @@ def run_rule_engine(df):
     return preds, rules.sum(axis=1)
 
 
-def ensemble(if_p, lof_p, rule_p):
+def ensemble(if_p, lof_p, rule_p, lstm_p):
     min_v = cfg.models.ensemble.min_votes
-    votes = if_p + lof_p + rule_p
+    votes = if_p + lof_p + rule_p + lstm_p
     final = (votes >= min_v).astype(int)
-    log.info(f"Ensemble ({min_v}/3): {final.sum():,} anomalies ({final.mean():.2%})")
+    log.info(f"Ensemble ({min_v}/4): {final.sum():,} anomalies ({final.mean():.2%})")
+    log.info(
+        f"  Votes — IF: {if_p.sum():,}  LOF: {lof_p.sum():,}  "
+        f"Rules: {rule_p.sum():,}  LSTM: {lstm_p.sum():,}"
+    )
     return final, votes
 
 
