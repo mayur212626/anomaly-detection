@@ -115,3 +115,52 @@ def build_sequences(df, feature_cols, seq_len=SEQ_LEN):
         ip_list.append(ip)
 
     return np.array(seqs, dtype=np.float32), ip_list
+
+
+def train_model(model, X_tensor, device, max_epochs=MAX_EPOCHS, patience=PATIENCE):
+    """
+    Standard autoencoder training: minimize MSE between input and reconstruction.
+    Input == target — we're not doing classification, just compression + rebuild.
+    """
+    from torch.utils.data import DataLoader, TensorDataset
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-5)
+    criterion = nn.MSELoss()
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, factor=0.5, verbose=False)
+    loader    = DataLoader(TensorDataset(X_tensor), batch_size=BATCH_SIZE, shuffle=True,
+                           pin_memory=(device.type == "cuda"))
+
+    best_loss  = float("inf")
+    wait       = 0
+    best_state = None
+
+    model.train()
+    for epoch in range(max_epochs):
+        epoch_loss = 0.0
+        for (batch,) in loader:
+            batch = batch.to(device)
+            optimizer.zero_grad()
+            out  = model(batch)
+            loss = criterion(out, batch)
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+            epoch_loss += loss.item()
+
+        avg = epoch_loss / len(loader)
+        scheduler.step(avg)
+        log.info(f"    epoch {epoch + 1:02d}/{max_epochs} — loss {avg:.6f}")
+
+        if avg < best_loss - 1e-5:
+            best_loss  = avg
+            wait       = 0
+            best_state = {k: v.clone() for k, v in model.state_dict().items()}
+        else:
+            wait += 1
+            if wait >= patience:
+                log.info(f"    early stopping at epoch {epoch + 1}")
+                break
+
+    if best_state:
+        model.load_state_dict(best_state)
+    return model, best_loss
