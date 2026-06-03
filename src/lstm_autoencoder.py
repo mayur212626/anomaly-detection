@@ -164,3 +164,21 @@ def train_model(model, X_tensor, device, max_epochs=MAX_EPOCHS, patience=PATIENC
     if best_state:
         model.load_state_dict(best_state)
     return model, best_loss
+
+
+def compute_errors(model, X_tensor, device):
+    """
+    Run inference on all sequences and return per-sequence mean squared
+    reconstruction error. Higher error → IP's behavior pattern is unusual.
+    """
+    from torch.utils.data import DataLoader, TensorDataset
+
+    model.eval()
+    errors = []
+    with torch.no_grad():
+        for (batch,) in DataLoader(TensorDataset(X_tensor), batch_size=BATCH_SIZE * 2):
+            batch = batch.to(device)
+            out   = model(batch)
+            err   = ((out - batch) ** 2).mean(dim=(1, 2))
+            errors.extend(err.cpu().numpy().tolist())
+    return np.array(errors, dtype=np.float32)
