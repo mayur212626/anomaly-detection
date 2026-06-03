@@ -191,19 +191,25 @@ def _placeholder_lstm():
     return None
 
 
-def track_mlflow(eval_results, shap_imp):
+def track_mlflow(eval_results, shap_imp, lstm_meta=None):
     try:
         import mlflow
         mlflow.set_experiment("log-anomaly-detection")
         with mlflow.start_run(run_name=f"ensemble_{datetime.now().strftime('%m%d_%H%M')}"):
-            mlflow.set_tags({"methods": "IF+LOF+Rules", "author": "Mayur Patil"})
+            mlflow.set_tags({"methods": "IF+LOF+Rules+LSTM", "author": "Mayur Patil"})
             mlflow.log_param("contamination", cfg.models.isolation_forest.contamination)
-            mlflow.log_param("n_records", eval_results["n_total"])
-            mlflow.log_metric("anomaly_rate", eval_results["anomaly_rate"])
+            mlflow.log_param("n_records",     eval_results["n_total"])
+            mlflow.log_param("ensemble",      "3-of-4")
+            mlflow.log_metric("anomaly_rate",  eval_results["anomaly_rate"])
             mlflow.log_metric("critical_lift", eval_results["critical_lift"])
             for k, v in eval_results["precision_at_k"].items():
                 mlflow.log_metric(k.replace("@", "_at_"), v)
-            log.info(f"MLflow run logged. View: mlflow ui --port 5000")
+            if lstm_meta:
+                mlflow.log_metric("lstm_final_loss",   lstm_meta.get("final_loss", 0))
+                mlflow.log_metric("lstm_anomaly_rate", lstm_meta.get("anomaly_rate", 0))
+                mlflow.log_param("lstm_seq_len",   lstm_meta.get("seq_len", 10))
+                mlflow.log_param("lstm_hidden_dim", lstm_meta.get("hidden_dim", 64))
+            log.info("MLflow run logged. View: mlflow ui --port 5000")
     except ImportError:
         log.warning("mlflow not installed — skipping")
 
