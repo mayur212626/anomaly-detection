@@ -120,3 +120,36 @@ def _feed_tab():
             className="border-secondary",
         ),
     ], fluid=True, className="pt-3")
+
+
+def _ip_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Top 20 Offending IPs", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="ip-top-bar", style={"height": "380px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=7),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("IP Behavioral Profile (click a bar to drill down)",
+                                   className="fw-semibold"),
+                    dbc.CardBody(html.Div(id="ip-drilldown", style={"minHeight": "380px"})),
+                ])
+            ], md=5),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader(
+                        "Error Rate vs Request Volume  (bubble size = anomaly score)",
+                        className="fw-semibold",
+                    ),
+                    dbc.CardBody(dcc.Graph(id="ip-scatter", style={"height": "320px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ]),
+        ], className="g-3"),
+    ], fluid=True, className="pt-3")
