@@ -15,11 +15,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install
+      - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Lint
-        run: flake8 src/ api/ tests/ --max-line-length=110 --ignore=E501,W503
-      - name: Test
+        run: flake8 src/ api/ tests/ dashboard/ --max-line-length=110 --ignore=E501,W503
+      - name: Unit tests
         run: pytest tests/ -v --tb=short
 
   pipeline:
@@ -31,18 +31,21 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install
+      - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Data pipeline
         run: python src/data_pipeline.py
-      - name: Anomaly detection
+      - name: Anomaly detection (IF + LOF + Rules + LSTM)
         run: python src/models.py
-      - name: Alerting
+      - name: Alerting + Drift detection
         run: python src/alerting.py
-      - name: Upload artifacts
+      - name: Validate dashboard imports
+        run: python -c "import dashboard.layouts; import dashboard.callbacks; print('Dashboard imports OK')"
+      - name: Upload pipeline artifacts
         uses: actions/upload-artifact@v3
         with:
           name: pipeline-outputs
           path: |
             docs/
             models/
+            monitoring/
