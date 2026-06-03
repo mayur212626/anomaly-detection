@@ -109,3 +109,35 @@ body {
 ::-webkit-scrollbar-track { background: #0d1117; }
 ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+/* ── responsive layout ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .kpi-card h3 { font-size: 1.5rem; }
+    .feed-table  { font-size: 0.75rem; }
+}
+
+/* ── loading state ───────────────────────────────────────────────────────────── */
+._dash-loading {
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+/* ── select inputs ───────────────────────────────────────────────────────────── */
+.form-select, .form-control {
+    background-color: #21262d !important;
+    border-color:     #30363d !important;
+    color:            #c9d1d9 !important;
+}
+
+.form-select:focus, .form-control:focus {
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25) !important;
+    border-color: #58a6ff !important;
+}
+
+.input-group-text {
+    background-color: #1c2128 !important;
+    border-color:     #30363d !important;
+    color:            #8b949e !important;
+    font-size:        0.82rem;
+}
