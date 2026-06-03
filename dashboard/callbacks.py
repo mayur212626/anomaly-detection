@@ -194,3 +194,61 @@ def update_overview(_):
         fig_k = _empty_fig()
 
     return fig_h, fig_p, fig_m, fig_k
+
+
+# ── anomaly feed ──────────────────────────────────────────────────────────────
+
+def _severity_badge(sev):
+    color = {"CRITICAL": "danger", "HIGH": "warning", "MEDIUM": "info", "LOW": "primary"}.get(sev, "secondary")
+    return dbc.Badge(sev, color=color, className="me-1")
+
+
+@app.callback(
+    Output("feed-table", "children"),
+    Output("feed-count", "children"),
+    Input("feed-severity-filter", "value"),
+    Input("feed-page-size",       "value"),
+    Input("refresh-interval",     "n_intervals"),
+)
+def update_feed(severity, page_size, _):
+    df = _load_flagged()
+    if df.empty or "anomaly" not in df.columns:
+        return html.P("No data yet. Run the full pipeline first.", className="text-muted"), ""
+
+    anom = df[df["anomaly"] == 1].copy()
+    if "severity" not in anom.columns:
+        sev_map = {
+            "CRITICAL": (anom.get("is_critical", 0) == 1) & (anom.get("is_heavy", 0) == 1),
+            "HIGH":     (anom.get("is_5xx", 0) == 1),
+        }
+        anom["severity"] = "LOW"
+        anom.loc[sev_map.get("HIGH", False), "severity"] = "HIGH"
+        anom.loc[sev_map.get("CRITICAL", False), "severity"] = "CRITICAL"
+
+    if severity != "ALL":
+        anom = anom[anom["severity"] == severity]
+
+    anom = anom.sort_values("anomaly_score", ascending=False).head(int(page_size))
+    count_label = f"Showing {len(anom):,} anomalies"
+
+    cols = ["ip", "severity", "status", "endpoint", "anomaly_score", "ip_error_rate", "ip_n_requests"]
+    cols = [c for c in cols if c in anom.columns]
+    rows = []
+    for _, r in anom.iterrows():
+        cells = []
+        for c in cols:
+            val = r[c]
+            if c == "severity":
+                cells.append(html.Td(_severity_badge(str(val))))
+            elif isinstance(val, float):
+                cells.append(html.Td(f"{val:.3f}"))
+            else:
+                cells.append(html.Td(str(val)))
+        rows.append(html.Tr(cells))
+
+    header = html.Thead(html.Tr([html.Th(c.replace("_", " ").title()) for c in cols]))
+    table  = dbc.Table([header, html.Tbody(rows)],
+                       striped=True, bordered=False, hover=True,
+                       dark=True, responsive=True, size="sm",
+                       className="feed-table mb-0")
+    return table, count_label
