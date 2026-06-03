@@ -135,14 +135,18 @@ def score_batch(req: BatchRequest):
 
 
 @app.get("/alerts")
-def alerts():
+def alerts(severity: str = None, limit: int = 20):
     if not os.path.exists("monitoring/alerts.json"):
         return {"message": "Run src/alerting.py first.", "alerts": []}
     data = json.load(open("monitoring/alerts.json"))
-    return {"total": len(data),
-            "critical": sum(1 for a in data if a["severity"]=="CRITICAL"),
-            "high":     sum(1 for a in data if a["severity"]=="HIGH"),
-            "recent":   data[:10]}
+    if severity:
+        data = [a for a in data if a.get("severity", "").upper() == severity.upper()]
+    return {
+        "total":    len(data),
+        "critical": sum(1 for a in data if a["severity"] == "CRITICAL"),
+        "high":     sum(1 for a in data if a["severity"] == "HIGH"),
+        "recent":   data[:limit],
+    }
 
 
 @app.get("/report")
