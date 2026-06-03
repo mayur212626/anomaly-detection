@@ -44,3 +44,68 @@ body {
     background-color: transparent !important;
     border-bottom: 2px solid #58a6ff !important;
 }
+
+/* ── cards ──────────────────────────────────────────────────────────────────── */
+.card {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px;
+}
+
+.card-header {
+    background-color: #1c2128 !important;
+    border-bottom: 1px solid #30363d !important;
+    font-size: 0.85rem;
+    color: #c9d1d9;
+    padding: 0.6rem 1rem;
+}
+
+.kpi-card .card-body {
+    padding: 1.2rem 1.4rem;
+}
+
+.kpi-card h3 {
+    font-size: 2rem;
+    color: #58a6ff;
+}
+
+/* ── severity badges ─────────────────────────────────────────────────────────── */
+.badge-critical { background-color: #ff4444 !important; }
+.badge-high     { background-color: #ff8800 !important; }
+.badge-medium   { background-color: #e6b800 !important; color: #0d1117 !important; }
+.badge-low      { background-color: #4488ff !important; }
+
+/* ── feed table ──────────────────────────────────────────────────────────────── */
+.feed-table thead th {
+    background-color: #1c2128;
+    color: #8b949e;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #30363d;
+}
+
+.feed-table td {
+    font-size: 0.82rem;
+    color: #c9d1d9;
+    vertical-align: middle;
+}
+
+.feed-table tr:hover {
+    background-color: #21262d !important;
+}
+
+/* ── typography ──────────────────────────────────────────────────────────────── */
+.font-monospace {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.85em;
+}
+
+.text-muted { color: #8b949e !important; }
+
+/* ── scrollbar ───────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0d1117; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #484f58; }
