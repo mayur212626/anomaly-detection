@@ -100,10 +100,16 @@ def build_alerts(df):
 def save_all(ip_rpt, hourly, endpoints, alerts, sev, drift):
     os.makedirs("docs", exist_ok=True)
     os.makedirs("monitoring", exist_ok=True)
-    report = {"generated_at": datetime.utcnow().isoformat(),
-              "severity_summary": sev, "drift_report": drift,
-              "top_ips": ip_rpt, "by_hour": hourly,
-              "by_endpoint": endpoints, "sample_alerts": alerts[:5]}
+    report = {
+        "generated_at":    datetime.utcnow().isoformat(),
+        "severity_summary": sev,
+        "drift_report":    drift,
+        "top_ips":         ip_rpt,
+        "by_hour":         hourly,
+        "by_endpoint":     endpoints,
+        "sample_alerts":   alerts[:10],
+        "total_alerts":    len(alerts),
+    }
     with open("docs/anomaly_report.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
     with open("monitoring/alerts.json", "w") as f:
