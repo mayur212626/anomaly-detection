@@ -507,3 +507,95 @@ def update_model(_):
         meta_table = html.P("Run src/models.py to train the LSTM model.", className="text-muted small")
 
     return fig_h, fig_v, fig_l, meta_table
+
+
+# ── drift monitor ─────────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("drift-psi-gauge",    "figure"),
+    Output("drift-ks-table",     "children"),
+    Output("drift-score-compare","figure"),
+    Output("drift-summary",      "children"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_drift(_):
+    drift = _load_drift()
+    df    = _load_flagged()
+
+    # PSI gauge
+    if drift:
+        psi = drift.get("psi", 0)
+        fig_g = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=psi,
+            number=dict(suffix="", font=dict(color="#c9d1d9")),
+            gauge=dict(
+                axis=dict(range=[0, 0.35], tickcolor="#8b949e"),
+                bar=dict(color="#4488ff"),
+                steps=[
+                    dict(range=[0,    0.1],  color="#1a2f1a"),
+                    dict(range=[0.1,  0.2],  color="#2f2a0a"),
+                    dict(range=[0.2,  0.35], color="#2f1010"),
+                ],
+                threshold=dict(line=dict(color="#ff4444", width=3), value=0.2),
+            ),
+            title=dict(text="PSI", font=dict(color="#8b949e")),
+        ))
+        fig_g.update_layout(paper_bgcolor="rgba(0,0,0,0)",
+                            font=dict(color="#c9d1d9"), height=280,
+                            margin=dict(l=20, r=20, t=40, b=20))
+    else:
+        fig_g = _empty_fig()
+
+    # KS test table
+    ks = drift.get("ks_tests", {}) if drift else {}
+    if ks:
+        rows = [
+            html.Tr([
+                html.Td(feat, className="font-monospace small"),
+                html.Td(f"{v['ks_stat']:.4f}"),
+                html.Td(f"{v['p_value']:.4f}"),
+                html.Td(dbc.Badge("DRIFT", color="danger") if v["drift"]
+                        else dbc.Badge("stable", color="success")),
+            ])
+            for feat, v in ks.items()
+        ]
+        ks_table = dbc.Table(
+            [html.Thead(html.Tr([html.Th("Feature"), html.Th("KS stat"),
+                                  html.Th("p-value"), html.Th("Status")])),
+             html.Tbody(rows)],
+            striped=True, bordered=False, hover=True, dark=True, size="sm",
+        )
+    else:
+        ks_table = html.P("Run src/alerting.py first.", className="text-muted small")
+
+    # score comparison: first vs second half
+    if not df.empty and "anomaly_score" in df.columns:
+        n = len(df)
+        a = df.iloc[:n // 2]["anomaly_score"]
+        b = df.iloc[n // 2:]["anomaly_score"]
+        fig_cmp = go.Figure()
+        fig_cmp.add_histogram(x=a, name="First half",  opacity=0.75, marker_color="#4488ff", nbinsx=40)
+        fig_cmp.add_histogram(x=b, name="Second half", opacity=0.75, marker_color="#ff8800", nbinsx=40)
+        fig_cmp.update_layout(**_LAYOUT, barmode="overlay",
+                              legend=dict(x=0.75, y=0.99, bgcolor="rgba(0,0,0,0)"))
+    else:
+        fig_cmp = _empty_fig()
+
+    # summary text
+    if drift:
+        status    = drift.get("psi_status", "—")
+        detected  = drift.get("drift", False)
+        action    = drift.get("action", "—")
+        ts        = drift.get("timestamp", "")
+        badge     = dbc.Badge("DRIFT DETECTED", color="danger") if detected \
+                    else dbc.Badge("Stable", color="success")
+        summary = html.Div([
+            html.P([badge, f"  {status}"], className="mb-2"),
+            html.P(["Action: ", html.Strong(action)], className="mb-1 small"),
+            html.P(f"Checked: {ts[:19] if ts else '—'}", className="text-muted small mb-0"),
+        ])
+    else:
+        summary = html.P("No drift report found. Run src/alerting.py.", className="text-muted small")
+
+    return fig_g, ks_table, fig_cmp, summary
