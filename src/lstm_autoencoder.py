@@ -241,9 +241,11 @@ def run(df, feature_cols):
     row_errors = df["ip"].map(ip_error_map).fillna(0.0).to_numpy(dtype=np.float32)
     row_preds  = df["ip"].map(ip_pred_map).fillna(0).astype(int).to_numpy()
 
+    n_flagged = int(row_preds.sum())
     log.info(
-        f"  Flagged {row_preds.sum():,} ({row_preds.mean():.2%}) | "
-        f"threshold: {threshold:.4f} | final loss: {final_loss:.6f}"
+        f"  Flagged {n_flagged:,} ({row_preds.mean():.2%}) | "
+        f"threshold: {threshold:.4f} | final loss: {final_loss:.6f} | "
+        f"mean error: {errors.mean():.4f} | max error: {errors.max():.4f}"
     )
 
     os.makedirs("models", exist_ok=True)
