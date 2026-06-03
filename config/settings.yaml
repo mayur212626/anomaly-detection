@@ -17,7 +17,7 @@ models:
     n_neighbors: 20
     contamination: 0.025
   ensemble:
-    min_votes: 2
+    min_votes: 3
     lift_threshold: 3.0
 
 spark:
