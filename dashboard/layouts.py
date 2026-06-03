@@ -153,3 +153,76 @@ def _ip_tab():
             ]),
         ], className="g-3"),
     ], fluid=True, className="pt-3")
+
+
+def _traffic_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Requests by Hour — Total vs Flagged", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="traffic-hourly-line", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=8),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Flagged Rate by Hour", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="traffic-flag-rate", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=4),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Anomalies by Endpoint", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="traffic-endpoint-bar", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=6),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Status Code Distribution in Anomalies", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="traffic-status-pie", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=6),
+        ], className="g-3"),
+    ], fluid=True, className="pt-3")
+
+
+def _model_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Anomaly Score Distribution", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="model-score-hist", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=8),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Ensemble Vote Agreement", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="model-votes-pie", style={"height": "300px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=4),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("LSTM Reconstruction Error Distribution", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="model-lstm-hist", style={"height": "280px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=6),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("LSTM Training Metadata", className="fw-semibold"),
+                    dbc.CardBody(html.Div(id="model-lstm-meta", className="p-1")),
+                ])
+            ], md=6),
+        ], className="g-3"),
+    ], fluid=True, className="pt-3")
