@@ -148,16 +148,17 @@ def compute_shap(model, X_scaled, feature_cols, n=1000):
         return {}
 
 
-def evaluate(df, final_preds, if_scores, lof_scores, feature_cols):
+def evaluate(df, final_preds, if_scores, lof_scores, lstm_errors, feature_cols):
     anom, normal = df[final_preds == 1], df[final_preds == 0]
     crit_anom    = anom["is_critical"].mean()
     crit_normal  = normal["is_critical"].mean()
     lift         = crit_anom / (crit_normal + 1e-9)
 
-    combined = (
-        (if_scores  - if_scores.min())  / (if_scores.max()  - if_scores.min()  + 1e-8) +
-        (lof_scores - lof_scores.min()) / (lof_scores.max() - lof_scores.min() + 1e-8)
-    ) / 2
+    def _norm(x):
+        lo, hi = x.min(), x.max()
+        return (x - lo) / (hi - lo + 1e-8)
+
+    combined = (_norm(if_scores) + _norm(lof_scores) + _norm(lstm_errors)) / 3
 
     p_at_k = precision_at_k(-combined, df["is_error"])
 
