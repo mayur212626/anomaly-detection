@@ -82,3 +82,41 @@ def _overview_tab():
             ], md=6),
         ], className="g-3"),
     ], fluid=True, className="pt-3")
+
+
+def _feed_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                dbc.InputGroup([
+                    dbc.InputGroupText("Severity"),
+                    dbc.Select(
+                        id="feed-severity-filter",
+                        options=[
+                            {"label": "All",      "value": "ALL"},
+                            {"label": "Critical", "value": "CRITICAL"},
+                            {"label": "High",     "value": "HIGH"},
+                            {"label": "Medium",   "value": "MEDIUM"},
+                            {"label": "Low",      "value": "LOW"},
+                        ],
+                        value="ALL",
+                    ),
+                ], className="me-3"),
+            ], md="auto"),
+            dbc.Col([
+                dbc.InputGroup([
+                    dbc.InputGroupText("Rows"),
+                    dbc.Select(
+                        id="feed-page-size",
+                        options=[{"label": str(n), "value": n} for n in [25, 50, 100, 250]],
+                        value=50,
+                    ),
+                ]),
+            ], md="auto"),
+            dbc.Col(html.Div(id="feed-count", className="text-muted small pt-2")),
+        ], className="mb-3 align-items-center"),
+        dbc.Card(
+            dbc.CardBody(html.Div(id="feed-table")),
+            className="border-secondary",
+        ),
+    ], fluid=True, className="pt-3")
