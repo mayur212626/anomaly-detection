@@ -252,3 +252,78 @@ def update_feed(severity, page_size, _):
                        dark=True, responsive=True, size="sm",
                        className="feed-table mb-0")
     return table, count_label
+
+
+# ── ip analysis ───────────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("ip-top-bar", "figure"),
+    Output("ip-scatter",  "figure"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_ip_charts(_):
+    df = _load_flagged()
+    if df.empty or "anomaly" not in df.columns:
+        return _empty_fig(), _empty_fig()
+
+    anom = df[df["anomaly"] == 1]
+
+    # top 20 IPs by flagged count
+    top = (anom.groupby("ip")
+               .agg(flagged=("anomaly", "count"),
+                    err_rate=("ip_error_rate", "mean"),
+                    score=("anomaly_score", "mean"))
+               .sort_values("flagged", ascending=False)
+               .head(20)
+               .reset_index())
+
+    colors = [_SEV_COLOR["CRITICAL"] if e > 0.5 else
+              _SEV_COLOR["HIGH"]     if e > 0.3 else
+              _SEV_COLOR["LOW"]
+              for e in top["err_rate"]]
+
+    fig_bar = go.Figure(go.Bar(
+        x=top["flagged"], y=top["ip"],
+        orientation="h", marker_color=colors,
+        customdata=top[["err_rate", "score"]].values,
+        hovertemplate="<b>%{y}</b><br>Flagged: %{x}<br>Err rate: %{customdata[0]:.1%}<extra></extra>",
+    ))
+    fig_bar.update_layout(**_LAYOUT, xaxis_title="Flagged requests",
+                          yaxis=dict(autorange="reversed", **_LAYOUT["yaxis"]))
+
+    # scatter: error rate vs request volume, bubble = anomaly score
+    ip_agg = (df.groupby("ip")
+                .agg(n_req=("ip_n_requests", "first"),
+                     err_rate=("ip_error_rate", "first"),
+                     score=("anomaly_score", "mean"),
+                     is_anom=("anomaly", "max"))
+                .reset_index())
+    ip_agg = ip_agg.sample(min(3000, len(ip_agg)), random_state=42)
+
+    normal = ip_agg[ip_agg["is_anom"] == 0]
+    flagged = ip_agg[ip_agg["is_anom"] == 1]
+
+    fig_s = go.Figure()
+    fig_s.add_scatter(
+        x=normal["n_req"], y=normal["err_rate"],
+        mode="markers", name="Normal",
+        marker=dict(color="#30363d", size=5, opacity=0.6),
+    )
+    fig_s.add_scatter(
+        x=flagged["n_req"], y=flagged["err_rate"],
+        mode="markers", name="Anomaly",
+        marker=dict(
+            color=flagged["score"],
+            colorscale="Reds",
+            size=(flagged["score"] * 18 + 5).clip(5, 20),
+            opacity=0.8,
+            showscale=True,
+            colorbar=dict(title="Score", len=0.6),
+        ),
+        text=flagged["ip"],
+        hovertemplate="<b>%{text}</b><br>Requests: %{x:,}<br>Error rate: %{y:.1%}<extra></extra>",
+    )
+    fig_s.update_layout(**_LAYOUT, xaxis_title="Total requests (IP)", yaxis_title="Error rate",
+                        legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0)"))
+
+    return fig_bar, fig_s
