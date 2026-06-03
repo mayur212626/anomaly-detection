@@ -153,7 +153,7 @@ def build_features(df):
     df["is_large"] = (df["bytes_z"] > 4).astype(int)
 
     threshold     = df["ip_n_requests"].quantile(cfg.features.heavy_ip_percentile)
-    df["is_heavy"] = (df["ip_n_requests"] > threshold).astype(int)
+    df["is_heavy"] = (df["ip_n_requests"] >= threshold).astype(int)
 
     df["dos_signal"]  = ((df["is_heavy"] == 1) &
                           (df["ip_error_rate"] > 0.3)).astype(int)

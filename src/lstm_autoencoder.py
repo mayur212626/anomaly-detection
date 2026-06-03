@@ -29,6 +29,8 @@ try:
     import torch.nn as nn
     TORCH_AVAILABLE = True
 except ImportError:
+    torch = None  # type: ignore
+    nn    = None  # type: ignore
     TORCH_AVAILABLE = False
     log.warning("PyTorch not installed — LSTM Autoencoder will be skipped")
 
@@ -43,7 +45,10 @@ PATIENCE          = 5
 ANOMALY_PERCENTILE = 97.5
 
 
-class LSTMAutoencoder(nn.Module):
+_Base = nn.Module if TORCH_AVAILABLE else object
+
+
+class LSTMAutoencoder(_Base):
     """
     Seq2Seq LSTM Autoencoder.
 
