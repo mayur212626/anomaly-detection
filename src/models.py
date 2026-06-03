@@ -214,7 +214,7 @@ def track_mlflow(eval_results, shap_imp, lstm_meta=None):
         log.warning("mlflow not installed — skipping")
 
 
-def save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp):
+def save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp, lstm_meta=None):
     df = df.copy()
     df["anomaly"]       = final_preds
     df["anomaly_score"] = combined
@@ -225,11 +225,12 @@ def save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp):
     os.makedirs("docs", exist_ok=True)
     meta = {
         "trained_at":      datetime.utcnow().isoformat(),
-        "version":         "2.0.0",
-        "methods":         ["IsolationForest", "LOF", "RuleEngine"],
-        "ensemble":        "2-of-3 majority vote",
+        "version":         "3.0.0",
+        "methods":         ["IsolationForest", "LOF", "RuleEngine", "LSTMAutoencoder"],
+        "ensemble":        "3-of-4 majority vote",
         "eval":            eval_results,
         "shap_importance": shap_imp,
+        "lstm":            lstm_meta or {},
     }
     with open("docs/model_meta.json", "w") as f:
         json.dump(meta, f, indent=2)
