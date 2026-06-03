@@ -125,3 +125,72 @@ def update_kpis(_):
     lift_label  = f"{lift:.1f}x" if lift else "—"
 
     return f"{total:,}", f"{critical:,}", drift_label, lift_label
+
+
+# ── overview charts ───────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("overview-hourly-chart",  "figure"),
+    Output("overview-severity-pie",  "figure"),
+    Output("overview-method-bar",    "figure"),
+    Output("overview-precision-bar", "figure"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_overview(_):
+    rep  = _load_report()
+    meta = _load_model_meta()
+
+    # hourly anomaly rate
+    hourly = rep.get("by_hour", [])
+    if hourly:
+        hrs    = [r["hour"] for r in hourly]
+        total  = [r["total"]   for r in hourly]
+        flagged = [r.get("flagged", 0) for r in hourly]
+        rate   = [f / (t + 1e-6) for f, t in zip(flagged, total)]
+        fig_h  = go.Figure()
+        fig_h.add_bar(x=hrs, y=flagged, name="Flagged",    marker_color="#4488ff")
+        fig_h.add_scatter(x=hrs, y=[r * max(total) for r in rate], name="Rate (scaled)",
+                          mode="lines+markers", line=dict(color="#ff8800", width=2),
+                          yaxis="y")
+        fig_h.update_layout(**_LAYOUT, legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0)"),
+                            xaxis_title="Hour", yaxis_title="Count")
+    else:
+        fig_h = _empty_fig()
+
+    # severity pie
+    sev_sum = rep.get("severity_summary", {})
+    if sev_sum:
+        labels = list(sev_sum.keys())
+        vals   = [sev_sum[k] for k in labels]
+        colors = [_SEV_COLOR.get(k, "#888") for k in labels]
+        fig_p  = go.Figure(go.Pie(labels=labels, values=vals, hole=0.45,
+                                   marker=dict(colors=colors),
+                                   textinfo="percent+label"))
+        fig_p.update_layout(**_LAYOUT)
+    else:
+        fig_p = _empty_fig()
+
+    # method vote bar
+    mc = meta.get("eval", {}).get("method_counts", {})
+    if mc:
+        methods = [k for k in mc if k != "ensemble"]
+        counts  = [mc[k] for k in methods]
+        fig_m   = go.Figure(go.Bar(x=methods, y=counts,
+                                    marker_color=["#4488ff", "#ff8800", "#44cc88", "#cc44ff"]))
+        fig_m.update_layout(**_LAYOUT, yaxis_title="Flagged rows")
+    else:
+        fig_m = _empty_fig()
+
+    # precision@k bar
+    pak = meta.get("eval", {}).get("precision_at_k", {})
+    if pak:
+        ks   = list(pak.keys())
+        vals = [pak[k] for k in ks]
+        fig_k = go.Figure(go.Bar(x=ks, y=vals, marker_color="#44cc88",
+                                  text=[f"{v:.0%}" for v in vals], textposition="outside"))
+        fig_k.update_layout(**_LAYOUT, yaxis=dict(range=[0, 1.05], **_LAYOUT["yaxis"]),
+                             yaxis_title="Precision")
+    else:
+        fig_k = _empty_fig()
+
+    return fig_h, fig_p, fig_m, fig_k
