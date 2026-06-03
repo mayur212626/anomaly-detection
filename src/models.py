@@ -182,13 +182,13 @@ def evaluate(df, final_preds, if_scores, lof_scores, lstm_errors, feature_cols):
             "heavy_rate":    round(float(anom["is_heavy"].mean()), 4),
         }
     }
-    log.info(f"  Lift: {lift:.1f}x | Quality: {results['quality']}")
+    log.info(
+        f"  Lift: {lift:.1f}x  | Quality: {results['quality']}  "
+        f"| Anomalies: {final_preds.sum():,} ({final_preds.mean():.2%})"
+    )
     return results, combined
 
 
-def _placeholder_lstm():
-    """Used as fallback when LSTM is unavailable."""
-    return None
 
 
 def track_mlflow(eval_results, shap_imp, lstm_meta=None):
