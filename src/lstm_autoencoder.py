@@ -34,15 +34,15 @@ except ImportError:
     TORCH_AVAILABLE = False
     log.warning("PyTorch not installed — LSTM Autoencoder will be skipped")
 
-SEQ_LEN           = 10
-HIDDEN_DIM        = 64
+SEQ_LEN           = 10    # last N requests per IP (zero-padded if fewer exist)
+HIDDEN_DIM        = 64    # 128 overfit on this data size; 64 was the sweet spot
 N_LAYERS          = 2
 DROPOUT           = 0.2
 BATCH_SIZE        = 256
 MAX_EPOCHS        = 30
 LR                = 1e-3
-PATIENCE          = 5
-ANOMALY_PERCENTILE = 97.5
+PATIENCE          = 5     # stop after 5 non-improving epochs to avoid overfitting
+ANOMALY_PERCENTILE = 97.5 # flag top 2.5% most unusual sequences
 
 
 _Base = nn.Module if TORCH_AVAILABLE else object
