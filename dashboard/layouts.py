@@ -226,3 +226,54 @@ def _model_tab():
             ], md=6),
         ], className="g-3"),
     ], fluid=True, className="pt-3")
+
+
+def _drift_tab():
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Population Stability Index (PSI)", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="drift-psi-gauge", style={"height": "280px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=4),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("KS Test Results by Feature", className="fw-semibold"),
+                    dbc.CardBody(html.Div(id="drift-ks-table")),
+                ])
+            ], md=8),
+        ], className="g-3 mb-4"),
+        dbc.Row([
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Anomaly Score — First Half vs Second Half", className="fw-semibold"),
+                    dbc.CardBody(dcc.Graph(id="drift-score-compare", style={"height": "280px"},
+                                          config={"displayModeBar": False})),
+                ])
+            ], md=7),
+            dbc.Col([
+                dbc.Card([
+                    dbc.CardHeader("Drift Summary", className="fw-semibold"),
+                    dbc.CardBody(html.Div(id="drift-summary", className="p-1")),
+                ])
+            ], md=5),
+        ], className="g-3"),
+    ], fluid=True, className="pt-3")
+
+
+def build_layout():
+    return html.Div([
+        _header(),
+        dcc.Interval(id="refresh-interval", interval=60_000, n_intervals=0),
+        dbc.Tabs([
+            dbc.Tab(_overview_tab(),  label="Overview",          tab_id="tab-overview"),
+            dbc.Tab(_feed_tab(),      label="Anomaly Feed",      tab_id="tab-feed"),
+            dbc.Tab(_ip_tab(),        label="IP Analysis",       tab_id="tab-ip"),
+            dbc.Tab(_traffic_tab(),   label="Traffic Patterns",  tab_id="tab-traffic"),
+            dbc.Tab(_model_tab(),     label="Model Performance", tab_id="tab-model"),
+            dbc.Tab(_drift_tab(),     label="Drift Monitor",     tab_id="tab-drift"),
+        ], id="main-tabs", active_tab="tab-overview",
+           className="border-bottom border-secondary"),
+    ])
