@@ -363,3 +363,71 @@ def update_ip_drilldown(click):
         html.P(ip, className="fw-bold mb-2 font-monospace"),
         dbc.Table([html.Tbody(rows)], borderless=True, size="sm", dark=True),
     ])
+
+
+# ── traffic patterns ──────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("traffic-hourly-line",  "figure"),
+    Output("traffic-flag-rate",    "figure"),
+    Output("traffic-endpoint-bar", "figure"),
+    Output("traffic-status-pie",   "figure"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_traffic(_):
+    df  = _load_flagged()
+    rep = _load_report()
+    if df.empty:
+        return _empty_fig(), _empty_fig(), _empty_fig(), _empty_fig()
+
+    hourly = rep.get("by_hour", [])
+    if hourly:
+        hrs    = [r["hour"]          for r in hourly]
+        total  = [r["total"]         for r in hourly]
+        flagged = [r.get("flagged", 0) for r in hourly]
+        rate   = [f / (t + 1e-6) for f, t in zip(flagged, total)]
+
+        fig_line = go.Figure()
+        fig_line.add_scatter(x=hrs, y=total, name="Total",
+                             line=dict(color="#4488ff", width=2), mode="lines+markers")
+        fig_line.add_scatter(x=hrs, y=flagged, name="Flagged",
+                             line=dict(color="#ff4444", width=2), mode="lines+markers")
+        fig_line.update_layout(**_LAYOUT, xaxis_title="Hour of day", yaxis_title="Request count",
+                               legend=dict(x=0.01, y=0.99, bgcolor="rgba(0,0,0,0)"))
+
+        fig_rate = go.Figure(go.Bar(x=hrs, y=rate,
+                                    marker_color=[
+                                        "#ff4444" if r > 0.10 else
+                                        "#ff8800" if r > 0.05 else "#4488ff"
+                                        for r in rate
+                                    ],
+                                    text=[f"{r:.1%}" for r in rate],
+                                    textposition="outside"))
+        fig_rate.update_layout(**_LAYOUT, xaxis_title="Hour", yaxis_title="Flagged rate",
+                               yaxis=dict(tickformat=".0%", **_LAYOUT["yaxis"]))
+    else:
+        fig_line = fig_rate = _empty_fig()
+
+    endpoints = rep.get("by_endpoint", {})
+    if endpoints:
+        eps = list(endpoints.keys())[:15]
+        cnts = [endpoints[e]["count"] for e in eps]
+        fig_ep = go.Figure(go.Bar(x=cnts, y=eps, orientation="h",
+                                   marker_color="#44cc88"))
+        fig_ep.update_layout(**_LAYOUT, xaxis_title="Anomaly count",
+                             yaxis=dict(autorange="reversed", **_LAYOUT["yaxis"]))
+    else:
+        fig_ep = _empty_fig()
+
+    if "anomaly" in df.columns and "status" in df.columns:
+        anom_status = df[df["anomaly"] == 1]["status"].value_counts()
+        fig_st = go.Figure(go.Pie(
+            labels=anom_status.index.astype(str),
+            values=anom_status.values,
+            hole=0.4,
+        ))
+        fig_st.update_layout(**_LAYOUT)
+    else:
+        fig_st = _empty_fig()
+
+    return fig_line, fig_rate, fig_ep, fig_st
