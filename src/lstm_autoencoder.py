@@ -182,3 +182,82 @@ def compute_errors(model, X_tensor, device):
             err   = ((out - batch) ** 2).mean(dim=(1, 2))
             errors.extend(err.cpu().numpy().tolist())
     return np.array(errors, dtype=np.float32)
+
+
+def run(df, feature_cols):
+    """
+    Main entry point called from models.py.
+
+    Returns
+    -------
+    row_preds  : int array aligned with df — 1 = anomaly, 0 = normal
+    row_errors : float array of reconstruction errors per row (via ip lookup)
+    model      : trained LSTMAutoencoder or None if PyTorch unavailable
+    meta       : dict of training stats written to docs/lstm_meta.json
+    """
+    import os, json
+    from datetime import datetime
+    from sklearn.preprocessing import StandardScaler
+
+    if not TORCH_AVAILABLE:
+        log.warning("Skipping LSTM Autoencoder — install torch to enable")
+        zeros = np.zeros(len(df), dtype=int)
+        return zeros, zeros.astype(np.float32), None, {}
+
+    log.info("LSTM Autoencoder — building IP sequences...")
+
+    # Scale features on the full dataset before building sequences
+    scaler   = StandardScaler()
+    X_scaled = scaler.fit_transform(df[feature_cols].fillna(0))
+
+    df_s = df[["ip", "day", "hour"]].copy()
+    for i, col in enumerate(feature_cols):
+        df_s[col] = X_scaled[:, i]
+
+    X_seqs, ip_list = build_sequences(df_s, feature_cols)
+
+    device   = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    X_tensor = torch.tensor(X_seqs)
+    log.info(f"  {len(ip_list):,} sequences | shape {X_seqs.shape} | device: {device}")
+
+    model = LSTMAutoencoder(input_dim=len(feature_cols)).to(device)
+
+    log.info("  Training...")
+    model, final_loss = train_model(model, X_tensor, device)
+
+    log.info("  Computing reconstruction errors...")
+    errors    = compute_errors(model, X_tensor, device)
+    threshold = float(np.percentile(errors, ANOMALY_PERCENTILE))
+    ip_preds  = (errors > threshold).astype(int)
+
+    ip_error_map = dict(zip(ip_list, errors.tolist()))
+    ip_pred_map  = dict(zip(ip_list, ip_preds.tolist()))
+
+    row_errors = df["ip"].map(ip_error_map).fillna(0.0).to_numpy(dtype=np.float32)
+    row_preds  = df["ip"].map(ip_pred_map).fillna(0).astype(int).to_numpy()
+
+    log.info(
+        f"  Flagged {row_preds.sum():,} ({row_preds.mean():.2%}) | "
+        f"threshold: {threshold:.4f} | final loss: {final_loss:.6f}"
+    )
+
+    os.makedirs("models", exist_ok=True)
+    torch.save(model.state_dict(), "models/lstm_autoencoder.pt")
+    np.save("models/lstm_threshold.npy", np.array([threshold]))
+
+    os.makedirs("docs", exist_ok=True)
+    meta = {
+        "trained_at":   datetime.utcnow().isoformat(),
+        "n_ips":        len(ip_list),
+        "seq_len":      SEQ_LEN,
+        "hidden_dim":   HIDDEN_DIM,
+        "n_layers":     N_LAYERS,
+        "final_loss":   round(float(final_loss), 6),
+        "threshold":    round(threshold, 6),
+        "anomaly_rate": round(float(row_preds.mean()), 4),
+        "n_features":   len(feature_cols),
+    }
+    with open("docs/lstm_meta.json", "w") as f:
+        json.dump(meta, f, indent=2)
+
+    return row_preds, row_errors, model, meta
