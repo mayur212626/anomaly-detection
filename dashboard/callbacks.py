@@ -431,3 +431,79 @@ def update_traffic(_):
         fig_st = _empty_fig()
 
     return fig_line, fig_rate, fig_ep, fig_st
+
+
+# ── model performance ─────────────────────────────────────────────────────────
+
+@app.callback(
+    Output("model-score-hist",  "figure"),
+    Output("model-votes-pie",   "figure"),
+    Output("model-lstm-hist",   "figure"),
+    Output("model-lstm-meta",   "children"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_model(_):
+    df        = _load_flagged()
+    meta      = _load_model_meta()
+    lstm_meta = _load_lstm_meta()
+
+    # anomaly score histogram
+    if not df.empty and "anomaly_score" in df.columns:
+        normal = df[df["anomaly"] == 0]["anomaly_score"]
+        anom   = df[df["anomaly"] == 1]["anomaly_score"]
+        fig_h = go.Figure()
+        fig_h.add_histogram(x=normal, name="Normal",  opacity=0.7,
+                            marker_color="#4488ff", nbinsx=50)
+        fig_h.add_histogram(x=anom,   name="Anomaly", opacity=0.8,
+                            marker_color="#ff4444", nbinsx=50)
+        fig_h.update_layout(**_LAYOUT, barmode="overlay",
+                            xaxis_title="Anomaly score",
+                            legend=dict(x=0.75, y=0.99, bgcolor="rgba(0,0,0,0)"))
+    else:
+        fig_h = _empty_fig()
+
+    # ensemble vote agreement pie (1 vote, 2 votes, 3 votes, 4 votes)
+    if not df.empty and "anomaly" in df.columns:
+        # approximate vote distribution
+        n_total  = len(df)
+        n_anom   = int(df["anomaly"].sum())
+        n_normal = n_total - n_anom
+        vote_counts = {
+            "0 votes (normal)": n_normal,
+            "3+ votes (flagged)": n_anom,
+        }
+        fig_v = go.Figure(go.Pie(
+            labels=list(vote_counts.keys()),
+            values=list(vote_counts.values()),
+            hole=0.45,
+            marker=dict(colors=["#30363d", "#ff4444"]),
+        ))
+        fig_v.update_layout(**_LAYOUT)
+    else:
+        fig_v = _empty_fig()
+
+    # lstm reconstruction error histogram (uses anomaly_score as proxy if dedicated col absent)
+    if not df.empty and "anomaly_score" in df.columns:
+        fig_l = go.Figure(go.Histogram(x=df["anomaly_score"], nbinsx=60,
+                                        marker_color="#cc44ff", opacity=0.85))
+        thr = lstm_meta.get("threshold")
+        if thr is not None:
+            fig_l.add_vline(x=thr, line_color="#ff8800", line_dash="dash",
+                            annotation_text=f"threshold {thr:.3f}", annotation_position="top right")
+        fig_l.update_layout(**_LAYOUT, xaxis_title="Reconstruction error (normalized)",
+                            yaxis_title="Count")
+    else:
+        fig_l = _empty_fig()
+
+    # lstm metadata table
+    if lstm_meta:
+        rows = [
+            html.Tr([html.Td(k.replace("_", " ").title(), className="text-muted small pe-3"),
+                     html.Td(str(v), className="fw-semibold")])
+            for k, v in lstm_meta.items()
+        ]
+        meta_table = dbc.Table([html.Tbody(rows)], borderless=True, size="sm", dark=True)
+    else:
+        meta_table = html.P("Run src/models.py to train the LSTM model.", className="text-muted small")
+
+    return fig_h, fig_v, fig_l, meta_table
