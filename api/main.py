@@ -172,13 +172,35 @@ def summary():
     if not os.path.exists("monitoring/scored.jsonl"):
         return {"message": "No scored traffic yet."}
     recs   = [json.loads(l) for l in open("monitoring/scored.jsonl") if l.strip()]
+    if not recs:
+        return {"message": "No records in scored log."}
     scores = [r["score"] for r in recs]
-    return {"n_scored":     len(recs),
-            "anomaly_rate": round(sum(r["anomaly"] for r in recs)/len(recs), 4),
-            "mean_score":   round(sum(scores)/len(scores), 4),
-            "severity_dist": {s: sum(1 for r in recs if r.get("severity")==s)
-                              for s in ["CRITICAL","HIGH","MEDIUM","NORMAL"]},
-            "last_seen":    recs[-1]["ts"]}
+    return {
+        "n_scored":     len(recs),
+        "anomaly_rate": round(sum(r["anomaly"] for r in recs) / len(recs), 4),
+        "mean_score":   round(sum(scores) / len(scores), 4),
+        "min_score":    round(min(scores), 4),
+        "max_score":    round(max(scores), 4),
+        "severity_dist": {s: sum(1 for r in recs if r.get("severity") == s)
+                          for s in ["CRITICAL", "HIGH", "MEDIUM", "NORMAL"]},
+        "last_seen":    recs[-1]["ts"],
+    }
+
+
+@app.get("/model/info")
+def model_info():
+    if not os.path.exists("docs/model_meta.json"):
+        raise HTTPException(404, "Run src/models.py first.")
+    meta = json.load(open("docs/model_meta.json"))
+    return {
+        "version":  meta.get("version"),
+        "methods":  meta.get("methods"),
+        "ensemble": meta.get("ensemble"),
+        "trained_at": meta.get("trained_at"),
+        "anomaly_rate": meta.get("eval", {}).get("anomaly_rate"),
+        "critical_lift": meta.get("eval", {}).get("critical_lift"),
+        "lstm": meta.get("lstm", {}),
+    }
 # background logging
 # monitoring summary
 
