@@ -84,3 +84,34 @@ class LSTMAutoencoder(nn.Module):
         ctx     = h[-1].unsqueeze(1).repeat(1, x.size(1), 1)
         dec_out, _ = self.decoder(ctx, (h, c))
         return self.output_layer(dec_out)
+
+
+def build_sequences(df, feature_cols, seq_len=SEQ_LEN):
+    """
+    Group log rows by IP, sort chronologically by (day, hour), and take
+    the most recent seq_len rows as a fixed-length sequence.
+
+    IPs with fewer than seq_len requests are zero-padded at the front so
+    real data always sits at the tail of the sequence — the decoder focuses
+    on predicting the most recent behavior.
+
+    Returns
+    -------
+    X        : ndarray of shape (n_ips, seq_len, n_features), float32
+    ip_list  : list of IP strings, same order as X rows
+    """
+    seqs    = []
+    ip_list = []
+    n_feats = len(feature_cols)
+
+    for ip, grp in df.sort_values(["ip", "day", "hour"]).groupby("ip", sort=False):
+        vals = grp[feature_cols].values.astype(np.float32)
+        if len(vals) >= seq_len:
+            seq = vals[-seq_len:]
+        else:
+            pad = np.zeros((seq_len - len(vals), n_feats), dtype=np.float32)
+            seq = np.vstack([pad, vals])
+        seqs.append(seq)
+        ip_list.append(ip)
+
+    return np.array(seqs, dtype=np.float32), ip_list
