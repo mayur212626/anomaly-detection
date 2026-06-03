@@ -1,0 +1,46 @@
+/* dashboard/assets/style.css */
+
+/* ── base ───────────────────────────────────────────────────────────────────── */
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* ── navbar ─────────────────────────────────────────────────────────────────── */
+.navbar {
+    background-color: #161b22 !important;
+    border-bottom: 1px solid #30363d !important;
+    padding: 0.6rem 1rem;
+}
+
+.navbar-brand {
+    color: #c9d1d9 !important;
+    letter-spacing: 0.01em;
+}
+
+/* ── tabs ───────────────────────────────────────────────────────────────────── */
+.nav-tabs {
+    background-color: #161b22;
+    border-bottom: 1px solid #30363d !important;
+    padding: 0 1rem;
+}
+
+.nav-tabs .nav-link {
+    color: #8b949e;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    transition: color 0.15s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #c9d1d9;
+}
+
+.nav-tabs .nav-link.active {
+    color: #58a6ff !important;
+    background-color: transparent !important;
+    border-bottom: 2px solid #58a6ff !important;
+}
