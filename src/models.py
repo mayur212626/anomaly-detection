@@ -240,20 +240,24 @@ def save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp, ls
 
 def run():
     log.info("=" * 55)
-    log.info("ANOMALY DETECTION — IF + LOF + RULES")
+    log.info("ANOMALY DETECTION — IF + LOF + RULES + LSTM")
     log.info("=" * 55)
     df, features = load()
     X = df[features].fillna(0).values
     scaler   = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-    if_preds,  if_scores,  if_model = run_isolation_forest(X_scaled)
-    lof_preds, lof_scores            = run_lof(X_scaled)
-    rule_preds, rule_votes           = run_rule_engine(df)
-    final_preds, votes               = ensemble(if_preds, lof_preds, rule_preds)
-    eval_results, combined           = evaluate(df, final_preds, if_scores, lof_scores, features)
-    shap_imp                         = compute_shap(if_model, X_scaled, features)
-    track_mlflow(eval_results, shap_imp)
-    meta = save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp)
+
+    if_preds,   if_scores,   if_model   = run_isolation_forest(X_scaled)
+    lof_preds,  lof_scores              = run_lof(X_scaled)
+    rule_preds, rule_votes              = run_rule_engine(df)
+    lstm_preds, lstm_errors, _, lstm_meta = lstm_autoencoder.run(df, features)
+
+    final_preds, votes   = ensemble(if_preds, lof_preds, rule_preds, lstm_preds)
+    eval_results, combined = evaluate(df, final_preds, if_scores, lof_scores, lstm_errors, features)
+    shap_imp             = compute_shap(if_model, X_scaled, features)
+
+    track_mlflow(eval_results, shap_imp, lstm_meta)
+    meta = save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp, lstm_meta)
     log.info("Done.\n")
     return df, final_preds, meta
 
