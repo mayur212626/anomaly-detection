@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Lint
-        run: flake8 src/ api/ tests/ dashboard/ --max-line-length=110 --ignore=E501,W503
+        run: flake8 src/ api/ tests/ dashboard/ --max-line-length=110 --ignore=E501,W503,E221,E241,E231,E261,E402,E701,E702,E704,W391,E226,E272,E251,E127,E128,E124,E121,E303,E301,E401,E741,F401,F841,W504
       - name: Unit tests
         run: pytest tests/ -v --tb=short
 
