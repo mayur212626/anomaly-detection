@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install dependencies
@@ -28,7 +28,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
       - name: Validate dashboard imports
         run: python -c "import dashboard.layouts; import dashboard.callbacks; print('Dashboard imports OK')"
       - name: Upload pipeline artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pipeline-outputs
           path: |
