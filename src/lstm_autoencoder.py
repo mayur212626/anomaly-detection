@@ -131,7 +131,7 @@ def train_model(model, X_tensor, device, max_epochs=MAX_EPOCHS, patience=PATIENC
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-5)
     criterion = nn.MSELoss()
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, factor=0.5, verbose=False)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, factor=0.5)
     loader    = DataLoader(TensorDataset(X_tensor), batch_size=BATCH_SIZE, shuffle=True,
                            pin_memory=(device.type == "cuda"))
 
