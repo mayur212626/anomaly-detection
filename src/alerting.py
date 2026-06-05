@@ -33,7 +33,7 @@ def assign_severity(row):
     elif row["is_5xx"] == 1 or (row["is_admin"] == 1 and
                                   row["ip_n_requests"] > cfg.alerting.critical_request_threshold):
         return "HIGH"
-    elif row["anomaly_score"] >= 2:
+    elif row.get("vote_count", 0) >= 4:
         return "MEDIUM"
     return "LOW"
 
@@ -88,7 +88,7 @@ def build_alerts(df):
             "ip":           row["ip"],
             "status":       int(row["status"]),
             "endpoint":     row["endpoint"],
-            "score":        int(row["anomaly_score"]),
+            "score":        round(float(row["anomaly_score"]), 4),
             "ip_error_rate": round(float(row["ip_error_rate"]), 4),
             "action":       "BLOCK_IP" if row["severity"] == "CRITICAL" else "INVESTIGATE",
         })

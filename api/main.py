@@ -5,7 +5,7 @@ cfg = SimpleNamespace(
     models=SimpleNamespace(
         isolation_forest=SimpleNamespace(n_estimators=200, contamination=0.025, bootstrap=True, random_state=42),
         lof=SimpleNamespace(n_neighbors=20, contamination=0.025),
-        ensemble=SimpleNamespace(min_votes=2, lift_threshold=3.0)
+        ensemble=SimpleNamespace(min_votes=3, lift_threshold=3.0)
     ),
     spark=SimpleNamespace(local_memory="4g", shuffle_partitions_local=8, shuffle_partitions_cluster=200),
     api=SimpleNamespace(port=8000, log_predictions=True),

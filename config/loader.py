@@ -30,7 +30,7 @@ def load_config():
         "models":   {"isolation_forest": {"n_estimators": 200, "contamination": 0.025,
                                            "bootstrap": True, "random_state": 42},
                      "lof":              {"n_neighbors": 20, "contamination": 0.025},
-                     "ensemble":         {"min_votes": 2, "lift_threshold": 3.0}},
+                     "ensemble":         {"min_votes": 3, "lift_threshold": 3.0}},
         "spark":    {"local_memory": "4g", "shuffle_partitions_local": 8,
                      "shuffle_partitions_cluster": 200},
         "api":      {"port": 8000, "log_predictions": True},

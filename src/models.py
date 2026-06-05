@@ -39,9 +39,10 @@ from datetime import datetime
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
-from src import lstm_autoencoder
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src import lstm_autoencoder  # noqa: E402
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S")
@@ -158,9 +159,9 @@ def evaluate(df, final_preds, if_scores, lof_scores, lstm_errors, feature_cols):
         lo, hi = x.min(), x.max()
         return (x - lo) / (hi - lo + 1e-8)
 
-    combined = (_norm(if_scores) + _norm(lof_scores) + _norm(lstm_errors)) / 3
+    combined = (_norm(-if_scores) + _norm(lof_scores) + _norm(lstm_errors)) / 3
 
-    p_at_k = precision_at_k(-combined, df["is_error"])
+    p_at_k = precision_at_k(combined, df["is_error"])
 
     results = {
         "n_total":        int(len(df)),
@@ -214,10 +215,11 @@ def track_mlflow(eval_results, shap_imp, lstm_meta=None):
         log.warning("mlflow not installed — skipping")
 
 
-def save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp, lstm_meta=None):
+def save(df, final_preds, combined, votes, eval_results, if_model, scaler, shap_imp, lstm_meta=None):
     df = df.copy()
     df["anomaly"]       = final_preds
     df["anomaly_score"] = combined
+    df["vote_count"]    = votes
     df.to_csv("data/logs_flagged.csv", index=False)
     os.makedirs("models", exist_ok=True)
     joblib.dump(if_model, "models/isolation_forest.pkl")
@@ -257,7 +259,7 @@ def run():
     shap_imp             = compute_shap(if_model, X_scaled, features)
 
     track_mlflow(eval_results, shap_imp, lstm_meta)
-    meta = save(df, final_preds, combined, eval_results, if_model, scaler, shap_imp, lstm_meta)
+    meta = save(df, final_preds, combined, votes, eval_results, if_model, scaler, shap_imp, lstm_meta)
     log.info("Done.\n")
     return df, final_preds, meta
 
