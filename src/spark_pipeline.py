@@ -66,8 +66,8 @@ def build_features(spark, df):
     p99    = df.approxQuantile("ip_n_requests", [0.99], 0.01)[0]
     df     = (df
         .withColumn("is_heavy",      (F.col("ip_n_requests") > p99).cast("int"))
-        .withColumn("dos_signal",    ((F.col("is_heavy")==1) & (F.col("ip_error_rate")>0.3)).cast("int"))
-        .withColumn("admin_recon",   ((F.col("is_admin")==1) & (F.col("ip_n_requests")>5000)).cast("int"))
+        .withColumn("dos_signal",    ((F.col("is_heavy") == 1) & (F.col("ip_error_rate") > 0.3)).cast("int"))
+        .withColumn("admin_recon",   ((F.col("is_admin") == 1) & (F.col("ip_n_requests") > 5000)).cast("int"))
     )
     log.info("Feature engineering complete")
     return df
