@@ -1,0 +1,1 @@
+["is_error", "is_critical", "is_4xx", "is_5xx", "is_admin", "is_empty", "is_large", "is_heavy", "ip_error_rate", "ip_crit_rate", "ip_avg_bytes", "ip_n_requests", "ip_admin_hits", "ip_empty_rate", "hour_avg_rps", "bytes_z", "bytes", "dos_signal", "admin_recon", "hour"]

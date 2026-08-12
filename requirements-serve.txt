@@ -1,0 +1,12 @@
+# Runtime-only deps for the /score API. Excludes pyspark, torch, dash, mlflow,
+# shap, matplotlib, seaborn — those are pipeline/training/dashboard only and are
+# NOT imported by api/main.py. Keeps the deploy image small and cold-start fast.
+# scikit-learn is pinned to the version the artifacts were trained with so the
+# pickled IsolationForest/scaler unpickle cleanly.
+fastapi
+uvicorn[standard]
+pandas
+numpy
+joblib
+scikit-learn==1.7.2
+pydantic

@@ -1,0 +1,16 @@
+.git
+__pycache__
+*.pyc
+data/logs.csv
+data/qc_report.json
+models/lstm_autoencoder.pt
+models/lstm_threshold.npy
+dashboard/
+tests/
+src/
+mlruns/
+monitoring/
+notebooks/
+*.ipynb
+.venv/
+venv/
