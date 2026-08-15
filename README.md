@@ -151,4 +151,4 @@ alerting.py         ← severity classification, KS + PSI drift detection
 ---
 
 **Mayur Patil** — M.S. Data Science, George Washington University
-[LinkedIn](https://linkedin.com/in/mayurpatil26) | [GitHub](https://github.com/mayur212626)
+[Portfolio](https://mjpatil.com) | [LinkedIn](https://linkedin.com/in/mayurpatil26) | [GitHub](https://github.com/mayur212626)
