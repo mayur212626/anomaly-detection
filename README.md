@@ -6,6 +6,14 @@ Local Outlier Factor, a hard-coded rule engine, and an LSTM Autoencoder for
 temporal behavioral analysis — plus a PySpark pipeline for distributed processing,
 a FastAPI scoring service, and a Plotly Dash monitoring dashboard.
 
+**🔗 Live:** [Interactive demo](https://mjpatil.com/#anomaly) · [Scoring API + docs](https://anomaly-detection-z5fp.onrender.com/docs) · [Health](https://anomaly-detection-z5fp.onrender.com/health) · [Portfolio](https://mjpatil.com)
+
+> The scoring API is deployed on Render (Docker, slim serving image — Isolation
+> Forest + scaler only). Free tier sleeps when idle, so the first request after a
+> pause can take ~50s to wake. Try the [interactive demo](https://mjpatil.com/#anomaly)
+> on the portfolio — pick an attack scenario (normal / DoS flood / admin recon)
+> and score it live.
+
 ---
 
 ## What it does
